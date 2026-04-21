@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>صلّحلي | NOUAKCHOTT</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Cairo', sans-serif; overflow-x: hidden; }
+        .hero-bg { background: linear-gradient(180deg, #FFFFFF 0%, #F5F7FA 100%); }
+        .hidden { display: none; }
+        .card-hover:hover { transform: translateY(-5px); transition: all 0.3s ease; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <div id="recaptcha-container"></div>
+
+    <header id="main-header" class="bg-white p-4 shadow-sm sticky top-0 z-50">
+        <div class="flex justify-between items-center max-w-7xl mx-auto">
+            <div class="flex items-center gap-2 cursor-pointer" onclick="showView('homepage-view')">
+                <span class="text-[10px] text-gray-400 font-bold">NOUAKCHOTT</span>
+                <span class="font-extrabold text-3xl text-gray-900">صلّحلي</span>
+                <span class="bg-[#E44A30] w-10 h-10 rounded-xl flex items-center justify-center font-extrabold text-white text-2xl">ص</span>
+            </div>
+            <nav class="flex items-center gap-4 text-sm font-semibold">
+                <button id="auth-status-btn" onclick="showView('login-view')" class="bg-[#E44A30] text-white px-4 py-2 rounded-xl font-bold shadow-md">تسجيل الدخول</button>
+            </nav>
+        </div>
+    </header>
+
+    <main id="content-area">
+
+        <section id="login-view" class="hidden max-w-md mx-auto mt-16 p-8 bg-white rounded-3xl shadow-xl border text-center">
+            <h2 class="font-extrabold text-2xl mb-8">مرحباً بك في صلّحلي</h2>
+            <div class="mb-4 text-right">
+                <label class="block text-xs text-gray-400 mb-2 font-bold">رقم الهاتف (موريتانيا)</label>
+                <div class="flex">
+                    <span class="p-4 bg-gray-100 rounded-r-xl border border-l-0 text-gray-500 font-bold">+222</span>
+                    <input type="tel" id="phone-input" placeholder="44112233" class="w-full p-4 border rounded-l-xl text-center focus:ring-2 focus:ring-[#E44A30] outline-none font-bold">
+                </div>
+            </div>
+            <button id="send-otp-btn" onclick="startPhoneAuth()" class="w-full bg-[#E44A30] text-white p-4 rounded-xl font-bold mb-4 shadow-lg active:scale-95 transition">إرسال كود التحقق</button>
+            <hr class="my-6">
+            <button onclick="showAdminPrompt()" class="w-full bg-gray-800 text-white p-4 rounded-xl font-bold text-sm">دخول لوحة الإدارة (Admin)</button>
+        </section>
+
+        <section id="homepage-view" class="hero-bg">
+            <div class="max-w-7xl mx-auto px-4 py-12 text-center">
+                <span class="text-xs text-green-600 font-bold bg-green-50 px-3 py-1 rounded-full border border-green-100">انواكشوط - متاح في جميع المقاطعات</span>
+                <h1 class="text-4xl md:text-5xl font-extrabold mt-6">فني الصيانة في انواكشوط، بكبسة زر</h1>
+                
+                <div class="mt-8 max-w-xl mx-auto">
+                    <p class="text-sm font-bold mb-3 text-gray-500 italic text-right">حدد مقاطعتك:</p>
+                    <select id="selected-area" class="w-full p-4 rounded-2xl border-2 border-gray-100 mb-6 font-bold text-gray-700 outline-none focus:border-[#E44A30] appearance-none bg-white">
+                        <option value="تفرغ زينة">تفرغ زينة (Tevragh Zeina)</option>
+                        <option value="لكصر">لكصر (El Ksar)</option>
+                        <option value="عرفات">عرفات (Arafat)</option>
+                        <option value="الميناء">الميناء (El Mina)</option>
+                        <option value="السبخة">السبخة (Sebkha)</option>
+                        <option value="توجنين">توجنين (Toujounine)</option>
+                        <option value="دار النعيم">دار النعيم (Dar Naïm)</option>
+                        <option value="تيارت">تيارت (Teyarett)</option>
+                        <option value="الرياض">الرياض (Riyad)</option>
+                    </select>
+                </div>
+
+                <div class="max-w-4xl mx-auto px-4 py-6 grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div onclick="requestService('تكييف')" class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm text-center card-hover cursor-pointer active:scale-90">
+                        <div class="text-3xl mb-2">❄️</div>
+                        <div class="font-bold">تكييف</div>
+                        <div class="text-[10px] text-[#E44A30] mt-2 font-bold uppercase">Request Now</div>
+                    </div>
+                    <div onclick="requestService('سباكة')" class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm text-center card-hover cursor-pointer active:scale-90">
+                        <div class="text-3xl mb-2">🚰</div>
+                        <div class="font-bold">سباكة</div>
+                        <div class="text-[10px] text-[#E44A30] mt-2 font-bold uppercase">Request Now</div>
+                    </div>
+                    <div onclick="requestService('كهرباء')" class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm text-center card-hover cursor-pointer active:scale-90">
+                        <div class="text-3xl mb-2">⚡</div>
+                        <div class="font-bold">كهرباء</div>
+                        <div class="text-[10px] text-[#E44A30] mt-2 font-bold uppercase">Request Now</div>
+                    </div>
+                    <div onclick="requestService('ميكانيكا')" class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm text-center card-hover cursor-pointer active:scale-90">
+                        <div class="text-3xl mb-2">🚗</div>
+                        <div class="font-bold">ميكانيكا</div>
+                        <div class="text-[10px] text-[#E44A30] mt-2 font-bold uppercase">Request Now</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="admin-view" class="hidden p-4 md:p-10 max-w-7xl mx-auto">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-2xl font-extrabold">لوحة الإدارة - طلبات الصيانة</h2>
+                <button onclick="showView('homepage-view')" class="text-sm bg-gray-200 px-4 py-2 rounded-lg font-bold">الرجوع للرئيسية</button>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10 text-center">
+                <div class="bg-gray-900 text-white p-6 rounded-3xl shadow-xl">
+                    <h4 class="text-xs opacity-60 font-bold mb-2">إجمالي الطلبات</h4>
+                    <p id="admin-total-orders" class="text-4xl font-black">0</p>
+                </div>
+                <div class="bg-[#E44A30] text-white p-6 rounded-3xl shadow-xl">
+                    <h4 class="text-xs opacity-80 font-bold mb-2">حالة النظام</h4>
+                    <p class="text-2xl font-black">متصل بقاعدة البيانات</p>
+                </div>
+            </div>
+            <div id="orders-container" class="space-y-4">
+                </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-white border-t mt-20 p-8 text-center text-gray-400">
+        <p class="text-xs font-bold italic">جميع الحقوق محفوظة - صُنع في موريتانيا 2026</p>
+    </footer>
+
+    <script>
+        // === بيانات الـ Firebase الخاصة بك ===
+        const firebaseConfig = {
+            apiKey: "AIzaSyCcuVnf30nfM3TOr2Hf50qi_5Mmyw88TnA",
+            authDomain: "sallehli-8590b.firebaseapp.com",
+            projectId: "sallehli-8590b",
+            storageBucket: "sallehli-8590b.firebasestorage.app",
+            messagingSenderId: "491646856650",
+            appId: "1:491646856650:web:1e8ca35f8e9c2073617333",
+            measurementId: "G-QHBJR2M4B9"
+        };
+
+        // تهيئة Firebase بالطريقة المتوافقة
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // التبديل بين الشاشات
+        function showView(id) {
+            ['homepage-view', 'login-view', 'admin-view'].forEach(v => {
+                document.getElementById(v).classList.add('hidden');
+            });
+            document.getElementById(id).classList.remove('hidden');
+            if(id === 'admin-view') loadAdminData();
+        }
+
+        // نظام التحقق بالهاتف
+        function startPhoneAuth() {
+            const phone = document.getElementById('phone-input').value;
+            if (phone.length < 8) {
+                alert("يرجى إدخال رقم هاتف موريتاني صحيح (8 أرقام)");
+                return;
+            }
+
+            const fullNumber = "+222" + phone;
+            
+            if (!window.recaptchaVerifier) {
+                window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('send-otp-btn', {
+                    'size': 'invisible'
+                });
+            }
+
+            auth.signInWithPhoneNumber(fullNumber, window.recaptchaVerifier)
+                .then((confirmationResult) => {
+                    const code = prompt("أدخل كود التحقق المرسل إلى هاتفك (6 أرقام):");
+                    if (code) return confirmationResult.confirm(code);
+                })
+                .then((result) => {
+                    alert("تم تسجيل الدخول بنجاح!");
+                    document.getElementById('auth-status-btn').innerText = "تم الدخول ✅";
+                    showView('homepage-view');
+                })
+                .catch((error) => {
+                    alert("خطأ: تأكد من تفعيل خدمة الـ SMS في Firebase وإضافة رابط الموقع للنطاقات المعتمدة.");
+                    console.error(error);
+                });
+        }
+
+        // إرسال الطلبات
+        function requestService(serviceName) {
+            const user = auth.currentUser;
+            if (!user) {
+                alert("يرجى تسجيل الدخول أولاً لطلب الخدمة");
+                showView('login-view');
+                return;
+            }
+
+            const area = document.getElementById('selected-area').value;
+            
+            db.collection("orders").add({
+                phone: user.phoneNumber,
+                service: serviceName,
+                area: area,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            }).then(() => {
+                alert(`تم استلام طلبك لخدمة (${serviceName}) في (${area}). سيتواصل معك الفني قريباً.`);
+            }).catch((e) => alert("خطأ في قاعدة البيانات: " + e.message));
+        }
+
+        // لوحة الإدارة
+        function showAdminPrompt() {
+            const pass = prompt("أدخل كلمة مرور الإدارة:");
+            if (pass === "Admin@2026") {
+                showView('admin-view');
+            } else {
+                alert("كلمة مرور خاطئة!");
+            }
+        }
+
+        function loadAdminData() {
+            const container = document.getElementById('orders-container');
+            container.innerHTML = "<p class='text-center'>جاري تحميل الطلبات...</p>";
+
+            db.collection("orders").orderBy("timestamp", "desc").onSnapshot((querySnapshot) => {
+                container.innerHTML = "";
+                document.getElementById('admin-total-orders').innerText = querySnapshot.size;
+                
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const date = data.timestamp ? data.timestamp.toDate().toLocaleString('ar-MR') : "...";
+                    
+                    container.innerHTML += `
+                        <div class="bg-white p-4 rounded-2xl border-r-4 border-r-[#E44A30] shadow-sm flex justify-between items-center">
+                            <div>
+                                <p class="font-bold text-lg">${data.service}</p>
+                                <p class="text-sm text-gray-500 font-bold">${data.area}</p>
+                                <p class="text-xs text-blue-600 font-bold">${data.phone}</p>
+                            </div>
+                            <div class="text-left">
+                                <p class="text-[10px] text-gray-400 font-bold">${date}</p>
+                            </div>
+                        </div>
+                    `;
+                });
+            });
+        }
+    </script>
+</body>
+</html>
